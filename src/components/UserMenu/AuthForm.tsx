@@ -1,0 +1,141 @@
+import { useState, type FormEvent } from "react";
+import { ApiError } from "../../lib/api";
+import { useAuth } from "../../lib/auth";
+
+const inputBase =
+  "w-full rounded-lg border border-white/12 bg-black/40 px-3 py-2 text-sm text-[#e8e4dc] placeholder:text-white/30 outline-none transition-colors focus:border-[#f5d7a4]/60 focus:ring-1 focus:ring-[#f5d7a4]/40";
+
+function Field({
+  label,
+  type,
+  autoComplete,
+  value,
+  onChange,
+  autoFocus,
+}: {
+  label: string;
+  type: "text" | "password";
+  autoComplete: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoFocus?: boolean;
+}) {
+  const id = `user-menu-${label.toLowerCase()}`;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="text-[11px] font-medium uppercase tracking-wider text-white/40"
+      >
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        autoComplete={autoComplete}
+        value={value}
+        autoFocus={autoFocus}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputBase}
+        spellCheck={false}
+      />
+    </div>
+  );
+}
+
+export function AuthForm() {
+  const { login, signup } = useAuth();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const switchMode = (next: "login" | "signup") => {
+    setMode(next);
+    setError(null);
+  };
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (pending) return;
+    setError(null);
+    setPending(true);
+    try {
+      if (mode === "login") {
+        await login(username, password);
+      } else {
+        await signup(username, password);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const submitLabel = mode === "login" ? "Sign in" : "Create account";
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="flex w-64 flex-col gap-3"
+      noValidate
+    >
+      <p
+        className="text-sm font-medium text-[#e8e4dc]"
+        role="heading"
+        aria-level={2}
+      >
+        {mode === "login" ? "Sign in" : "Create an account"}
+      </p>
+
+      <Field
+        label="Username"
+        type="text"
+        autoComplete="username"
+        value={username}
+        onChange={setUsername}
+        autoFocus
+      />
+      <Field
+        label="Password"
+        type="password"
+        autoComplete={mode === "login" ? "current-password" : "new-password"}
+        value={password}
+        onChange={setPassword}
+      />
+
+      {error && (
+        <p
+          role="alert"
+          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
+        >
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={pending || !username || password.length === 0}
+        className="mt-1 rounded-lg bg-[#f5d7a4] px-3 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#ffdfae] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pending ? "Please wait…" : submitLabel}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => switchMode(mode === "login" ? "signup" : "login")}
+        className="text-xs text-white/50 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
+      >
+        {mode === "login"
+          ? "No account? Create one"
+          : "Already have an account? Sign in"}
+      </button>
+    </form>
+  );
+}

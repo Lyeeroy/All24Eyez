@@ -1,6 +1,7 @@
 
 import { AnimatedPrice } from "./components/AnimatedPrice";
 import { useBtcPrice } from "./hooks/useBtcPrice";
+import { UserMenu } from "./components/UserMenu";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", {
@@ -76,6 +77,10 @@ export default function App() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0a0a0a] text-[#e8e4dc]">
+      <div className="fixed right-4 top-4 z-50">
+        <UserMenu />
+      </div>
+
       <main className="flex flex-col items-center gap-6 px-6">
         <AnimatedPrice price={price} direction={direction} tickDelta={tickDelta} />
 
