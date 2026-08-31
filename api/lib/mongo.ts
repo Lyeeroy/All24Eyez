@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -17,6 +17,14 @@ function connect(): Promise<MongoClient> {
   const client = new MongoClient(uri, {
     maxPoolSize: 1,
     minPoolSize: 0,
+    // Explicit TLS + Stable API required by MongoDB Atlas from serverless runtimes
+    // (the driver's SRV-based TLS inference can fail in Lambda without these).
+    tls: true,
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    },
   });
   return client.connect();
 }
