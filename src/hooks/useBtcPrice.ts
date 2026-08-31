@@ -14,11 +14,40 @@ export interface BtcPriceState {
   lastUpdate: number | null;
 }
 
-const BINANCE_REST =
-  "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
-const BINANCE_WS = "wss://stream.binance.com:9443/ws/btcusdt@ticker";
-const COINGECKO =
-  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true";
+export const CRYPTOS = [
+  { name: "bitcoin", symbol: "BTCUSDT" },
+  { name: "ethereum", symbol: "ETHUSDT" },
+  { name: "solana", symbol: "SOLUSDT" },
+  { name: "bnb", symbol: "BNBUSDT" },
+  { name: "xrp", symbol: "XRPUSDT" },
+  { name: "cardano", symbol: "ADAUSDT" },
+  { name: "avalanche", symbol: "AVAXUSDT" },
+  { name: "dogecoin", symbol: "DOGEUSDT" },
+  { name: "polkadot", symbol: "DOTUSDT" },
+  { name: "polygon", symbol: "MATICUSDT" },
+] as const;
+
+export type CryptoSymbol = typeof CRYPTOS[number]["symbol"];
+
+const SYMBOL_TO_COINGECKO: Record<string, string> = {
+  BTCUSDT: "bitcoin",
+  ETHUSDT: "ethereum",
+  SOLUSDT: "solana",
+  BNBUSDT: "binance-coin",
+  XRPUSDT: "ripple",
+  ADAUSDT: "cardano",
+  AVAXUSDT: "avalanche-2",
+  DOGEUSDT: "dogecoin",
+  DOTUSDT: "polkadot",
+  MATICUSDT: "polygon",
+};
+
+const BINANCE_REST = (symbol: string) =>
+  `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`;
+const BINANCE_WS = (symbol: string) =>
+  `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@ticker`;
+const COINGECKO = (id: string) =>
+  `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`;
 
 interface Snapshot {
   price: number;
@@ -63,8 +92,8 @@ function applySnapshot(
   }));
 }
 
-async function fetchBinance(): Promise<Snapshot> {
-  const res = await fetch(BINANCE_REST);
+async function fetchBinance(symbol: string): Promise<Snapshot> {
+  const res = await fetch(BINANCE_REST(symbol));
   if (!res.ok) throw new Error("binance rest failed");
   const data = await res.json();
   return {
@@ -76,28 +105,30 @@ async function fetchBinance(): Promise<Snapshot> {
   };
 }
 
-async function fetchCoinGecko(): Promise<Snapshot> {
-  const res = await fetch(COINGECKO);
+async function fetchCoinGecko(symbol: string): Promise<Snapshot> {
+  const id = SYMBOL_TO_COINGECKO[symbol] || symbol.toLowerCase();
+  const res = await fetch(COINGECKO(id));
   if (!res.ok) throw new Error("coingecko failed");
   const data = await res.json();
+  const key = id as keyof typeof data;
   return {
-    price: data.bitcoin.usd as number,
-    change24hPct: data.bitcoin.usd_24h_change as number,
+    price: data[key]?.usd as number,
+    change24hPct: data[key]?.usd_24h_change as number,
     change24hUsd: null,
     high24h: null,
     low24h: null,
   };
 }
 
-async function fetchPrice(): Promise<Snapshot> {
+async function fetchPrice(symbol: string): Promise<Snapshot> {
   try {
-    return await fetchBinance();
+    return await fetchBinance(symbol);
   } catch {
-    return await fetchCoinGecko();
+    return await fetchCoinGecko(symbol);
   }
 }
 
-export function useBtcPrice(): BtcPriceState {
+export function useBtcPrice(symbol: string = "BTCUSDT"): BtcPriceState {
   const [state, setState] = useState<BtcPriceState>({
     price: null,
     direction: "flat",
@@ -113,6 +144,7 @@ export function useBtcPrice(): BtcPriceState {
   const lastPriceRef = useRef<number | null>(null);
 
   useEffect(() => {
+    lastPriceRef.current = null;
     let ws: WebSocket | null = null;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -124,7 +156,7 @@ export function useBtcPrice(): BtcPriceState {
       setState((s) => ({ ...s, status: "polling" }));
       const poll = async () => {
         try {
-          const snap = await fetchPrice();
+          const snap = await fetchPrice(symbol);
           if (!stopped) applySnapshot(snap, setState, lastPriceRef);
         } catch {
           if (!stopped) setState((s) => ({ ...s, status: "error" }));
@@ -144,7 +176,7 @@ export function useBtcPrice(): BtcPriceState {
     const connectWs = () => {
       if (stopped) return;
       try {
-        ws = new WebSocket(BINANCE_WS);
+        ws = new WebSocket(BINANCE_WS(symbol));
       } catch {
         startPolling();
         return;
@@ -194,7 +226,7 @@ export function useBtcPrice(): BtcPriceState {
 
     void (async () => {
       try {
-        const snap = await fetchPrice();
+        const snap = await fetchPrice(symbol);
         if (!stopped) applySnapshot(snap, setState, lastPriceRef);
       } catch {
         if (!stopped) setState((s) => ({ ...s, status: "error" }));
@@ -210,7 +242,7 @@ export function useBtcPrice(): BtcPriceState {
         ws.close();
       }
     };
-  }, []);
+  }, [symbol]);
 
   return state;
 }

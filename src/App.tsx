@@ -1,6 +1,7 @@
-
+import { useState } from "react";
 import { AnimatedPrice } from "./components/AnimatedPrice";
-import { useBtcPrice } from "./hooks/useBtcPrice";
+import { CryptoSelector } from "./components/CryptoSelector";
+import { useBtcPrice, type CryptoSymbol } from "./hooks/useBtcPrice";
 import { UserMenu } from "./components/UserMenu";
 
 function fmt(n: number) {
@@ -65,6 +66,7 @@ function RangeBar({
 }
 
 export default function App() {
+  const [cryptoSymbol, setCryptoSymbol] = useState<CryptoSymbol>("BTCUSDT");
   const {
     price,
     direction,
@@ -73,7 +75,7 @@ export default function App() {
     low24h,
     tickDelta,
     status,
-  } = useBtcPrice();
+  } = useBtcPrice(cryptoSymbol);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0a0a0a] text-[#e8e4dc]">
@@ -82,6 +84,7 @@ export default function App() {
       </div>
 
       <main className="flex flex-col items-center gap-6 px-6">
+        <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
         <AnimatedPrice price={price} direction={direction} tickDelta={tickDelta} />
 
         {low24h !== null && high24h !== null && price !== null && (
