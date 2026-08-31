@@ -88,6 +88,16 @@ export function UserMenu() {
             <p className="w-64 text-sm text-white/50" aria-live="polite">
               Loading…
             </p>
+          ) : status === "error" ? (
+            <div className="w-64">
+              <p
+                role="alert"
+                className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
+              >
+                Can't reach the API server. Run `npx vercel dev` and open
+                http://localhost:3000.
+              </p>
+            </div>
           ) : isAuthed ? (
             <div className="flex w-64 flex-col gap-3">
               <div className="flex items-center gap-3">
