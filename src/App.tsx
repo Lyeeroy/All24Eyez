@@ -3,11 +3,21 @@ import { AnimatedPrice } from "./components/AnimatedPrice";
 import { CryptoSelector } from "./components/CryptoSelector";
 import { useBtcPrice, type CryptoSymbol } from "./hooks/useBtcPrice";
 import { UserMenu } from "./components/UserMenu";
+import { useAlerts } from "./hooks/useAlerts";
+import { AlertPanel } from "./components/AlertPanel";
+
+function getDecimals(price: number): number {
+  if (price >= 1) return 2;
+  if (price >= 0.1) return 3;
+  if (price >= 0.01) return 5;
+  return 8;
+}
 
 function fmt(n: number) {
+  const decimals = getDecimals(n);
   return n.toLocaleString("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
 }
 
@@ -22,8 +32,10 @@ function RangeBar({
   price: number;
   changePct: number | null;
 }) {
-  const span = high - low;
-  const raw = span > 0 ? (price - low) / span : 0.5;
+  const minLow = Math.min(low, high);
+  const maxHigh = Math.max(low, high);
+  const span = maxHigh - minLow;
+  const raw = span > 0 ? (price - minLow) / span : 0.5;
   const pct = Math.min(1, Math.max(0, raw));
 
   return (
@@ -58,8 +70,8 @@ function RangeBar({
         />
       </div>
       <div className="mt-2.5 flex items-center justify-between font-mono text-xs tabular-nums text-white/35">
-        <span>${fmt(low)}</span>
-        <span>${fmt(high)}</span>
+        <span>${fmt(minLow)}</span>
+        <span>${fmt(maxHigh)}</span>
       </div>
     </div>
   );
@@ -76,12 +88,22 @@ export default function App() {
     tickDelta,
     status,
   } = useBtcPrice(cryptoSymbol);
+  const { alerts, addAlert, removeAlert } = useAlerts(cryptoSymbol, price);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0a0a0a] text-[#e8e4dc]">
       <div className="fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 flex items-center justify-between px-4 py-2">
         <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
-        <UserMenu />
+        <div className="flex items-center gap-1">
+          <AlertPanel
+            symbol={cryptoSymbol}
+            price={price}
+            alerts={alerts}
+            onAdd={addAlert}
+            onRemove={removeAlert}
+          />
+          <UserMenu />
+        </div>
       </div>
 
       <main className="flex flex-col items-center gap-6 px-6 pt-16 sm:pt-[calc(2.5rem+env(safe-area-inset-top))]">

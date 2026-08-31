@@ -145,6 +145,17 @@ export function useBtcPrice(symbol: string = "BTCUSDT"): BtcPriceState {
 
   useEffect(() => {
     lastPriceRef.current = null;
+    setState({
+      price: null,
+      direction: "flat",
+      change24hPct: null,
+      change24hUsd: null,
+      high24h: null,
+      low24h: null,
+      tickDelta: null,
+      status: "connecting",
+      lastUpdate: null,
+    });
     let ws: WebSocket | null = null;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
