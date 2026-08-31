@@ -17,8 +17,11 @@ function connect(): Promise<MongoClient> {
   const client = new MongoClient(uri, {
     maxPoolSize: 1,
     minPoolSize: 0,
-    // Explicit TLS + Stable API required by MongoDB Atlas from serverless runtimes
-    // (the driver's SRV-based TLS inference can fail in Lambda without these).
+    // Explicit TLS + Stable API required by MongoDB Atlas from serverless runtimes.
+    // tls: true enforces TLS; the driver bundles its own CA so verification works
+    // without a system CA bundle. If a TLS handshake failure reappears, the likely
+    // cause is Atlas Network Access blocking the Lambda IP — add 0.0.0.0/0 there,
+    // then remove tlsInsecure if it was added as a workaround.
     tls: true,
     serverApi: {
       version: ServerApiVersion.v1,
