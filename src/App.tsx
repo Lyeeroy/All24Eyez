@@ -5,6 +5,8 @@ import { useBtcPrice, type CryptoSymbol } from "./hooks/useBtcPrice";
 import { UserMenu } from "./components/UserMenu";
 import { useAlerts } from "./hooks/useAlerts";
 import { AlertPanel } from "./components/AlertPanel";
+import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 function getDecimals(price: number): number {
   if (price >= 1) return 2;
@@ -41,17 +43,17 @@ function RangeBar({
   return (
     <div className="mt-6 w-72 max-w-[80vw]">
       <div className="mb-3 flex items-baseline justify-center gap-2.5">
-        <span className="text-[10px] uppercase tracking-[0.25em] text-white/30">
+        <span className="text-[10px] uppercase tracking-[0.25em] text-[var(--text-faint)]">
           past 24 hours
         </span>
         {changePct !== null && (
           <span
             className={`font-mono text-sm tabular-nums ${
               changePct > 0
-                ? "text-emerald-400"
+                ? "text-emerald-500 dark:text-emerald-400"
                 : changePct < 0
-                  ? "text-rose-400"
-                  : "text-white/60"
+                  ? "text-rose-500 dark:text-rose-400"
+                  : "text-[var(--text-muted)]"
             }`}
           >
             {changePct > 0 ? "+" : ""}
@@ -59,17 +61,17 @@ function RangeBar({
           </span>
         )}
       </div>
-      <div className="relative h-px w-full bg-white/15">
+      <div className="relative h-px w-full bg-[var(--range-track)]">
         <div
-          className="absolute top-1/2 h-px bg-white/40 transition-all duration-500"
+          className="absolute top-1/2 h-px bg-[var(--range-fill)] transition-all duration-500"
           style={{ left: 0, width: `${pct * 100}%` }}
         />
         <div
-          className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#e8e4dc] shadow-[0_0_0_4px_rgba(232,228,220,0.12)] transition-all duration-500"
+          className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--range-thumb)] shadow-[0_0_0_4px_var(--range-thumb-shadow)] transition-all duration-500"
           style={{ left: `${pct * 100}%` }}
         />
       </div>
-      <div className="mt-2.5 flex items-center justify-between font-mono text-xs tabular-nums text-white/35">
+      <div className="mt-2.5 flex items-center justify-between font-mono text-xs tabular-nums text-[var(--text-muted)]">
         <span>${fmt(minLow)}</span>
         <span>${fmt(maxHigh)}</span>
       </div>
@@ -77,7 +79,7 @@ function RangeBar({
   );
 }
 
-export default function App() {
+function MainDashboard() {
   const [cryptoSymbol, setCryptoSymbol] = useState<CryptoSymbol>("BTCUSDT");
   const {
     price,
@@ -91,10 +93,11 @@ export default function App() {
   const { alerts, addAlert, removeAlert } = useAlerts(cryptoSymbol, price);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#0a0a0a] text-[#e8e4dc]">
+    <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-200">
       <div className="fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 flex items-center justify-between px-4 py-2">
         <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeToggle />
           <AlertPanel
             symbol={cryptoSymbol}
             price={price}
@@ -127,11 +130,19 @@ export default function App() {
         )}
 
         {status !== "live" && (
-          <span className="mt-6 text-[10px] uppercase tracking-widest text-white/20">
+          <span className="mt-6 text-[10px] uppercase tracking-widest text-[var(--text-faint)]">
             {status === "polling" ? "polling" : status === "error" ? "offline" : "connecting…"}
           </span>
         )}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <MainDashboard />
+    </ThemeProvider>
   );
 }

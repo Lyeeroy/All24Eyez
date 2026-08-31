@@ -1,11 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../utils/cn";
 import type { PriceDirection } from "../hooks/useBtcPrice";
+import { useTheme } from "../hooks/useTheme";
 import {
-  COLOR_NEUTRAL_RGB,
-  COLOR_UP_RGB,
-  COLOR_DOWN_RGB,
-  COLOR_CURRENCY_SYMBOL,
+  COLOR_NEUTRAL_DARK_RGB,
+  COLOR_NEUTRAL_LIGHT_RGB,
+  COLOR_UP_DARK_RGB,
+  COLOR_DOWN_DARK_RGB,
+  COLOR_UP_LIGHT_RGB,
+  COLOR_DOWN_LIGHT_RGB,
+  COLOR_CURRENCY_SYMBOL_DARK,
+  COLOR_CURRENCY_SYMBOL_LIGHT,
   INTENSITY_DECAY_MS,
   DIGIT_SNAP_DELAY_MS,
 } from "../utils/constants";
@@ -88,7 +93,7 @@ function AnimatedDigit({
       <span
         className={cn(
           "absolute left-0 top-0 flex w-full flex-col items-center",
-          !instant && "digit-roll"
+          !instant && "digit-roll",
         )}
         style={{ transform: `translateY(${-(shift - STRIP_START)}em)` }}
       >
@@ -139,12 +144,25 @@ export function AnimatedPrice({
   change24hPct,
   symbol,
 }: AnimatedPriceProps) {
+  const { resolvedTheme } = useTheme();
   const [ready, setReady] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const first = useRef(true);
   const volTrackerRef = useRef<VolatilityTracker>(createVolatilityTracker());
   const decayRef = useRef<number | null>(null);
   const prevSymbolRef = useRef<string>(symbol);
+
+  const isDark = resolvedTheme === "dark";
+
+  // Select neutral RGB, directional colors, and currency symbol color based on active theme
+  const neutralRgb = isDark ? COLOR_NEUTRAL_DARK_RGB : COLOR_NEUTRAL_LIGHT_RGB;
+
+  const upColor = isDark ? COLOR_UP_DARK_RGB : COLOR_UP_LIGHT_RGB;
+  const downColor = isDark ? COLOR_DOWN_DARK_RGB : COLOR_DOWN_LIGHT_RGB;
+
+  const currencySymbolColor = isDark
+    ? COLOR_CURRENCY_SYMBOL_DARK
+    : COLOR_CURRENCY_SYMBOL_LIGHT;
 
   // Reset tracker state when active crypto symbol changes
   useEffect(() => {
@@ -185,12 +203,11 @@ export function AnimatedPrice({
       price,
       high24h,
       low24h,
-      change24hPct
+      change24hPct,
     );
 
     // Derive tick intensity relative to current market volatility scale
     const targetIntensity = calculateTickIntensity(pctMove, currentVol);
-    setIntensity(targetIntensity);
 
     // Cancel existing decay animation frame if running
     if (decayRef.current !== null) {
@@ -198,23 +215,31 @@ export function AnimatedPrice({
     }
 
     const startTime = performance.now();
-    const startIntensity = targetIntensity;
 
-    const animateDecay = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / INTENSITY_DECAY_MS);
-      // Ease-out quadratic decay to neutral
-      const current = startIntensity * (1 - Math.pow(progress, 2));
-      setIntensity(current);
+    // Start smoothly from peak intensity, blending seamlessly if a new tick arrives mid-decay
+    setIntensity((prevIntensity) => {
+      const startIntensity = Math.max(prevIntensity * 0.85, targetIntensity);
 
-      if (progress < 1) {
-        decayRef.current = requestAnimationFrame(animateDecay);
-      } else {
-        decayRef.current = null;
-      }
-    };
+      const animateDecay = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / INTENSITY_DECAY_MS);
 
-    decayRef.current = requestAnimationFrame(animateDecay);
+        // Cubic ease-out decay for silky smooth decoloring that lands gracefully at 0
+        const current = startIntensity * Math.pow(1 - progress, 1);
+
+        setIntensity(current);
+
+        if (progress < 1) {
+          decayRef.current = requestAnimationFrame(animateDecay);
+        } else {
+          setIntensity(0);
+          decayRef.current = null;
+        }
+      };
+
+      decayRef.current = requestAnimationFrame(animateDecay);
+      return startIntensity;
+    });
 
     return () => {
       if (decayRef.current !== null) {
@@ -224,30 +249,31 @@ export function AnimatedPrice({
   }, [tickDelta, price, high24h, low24h, change24hPct]);
 
   // Calculate RGB color transition based on direction and intensity
-  const targetColor = direction === "down" ? COLOR_DOWN_RGB : COLOR_UP_RGB;
+  const targetColor = direction === "down" ? downColor : upColor;
+
   const blend = (channel: number) =>
     Math.round(
-      COLOR_NEUTRAL_RGB[channel] +
-        (targetColor[channel] - COLOR_NEUTRAL_RGB[channel]) * intensity
+      neutralRgb[channel] +
+        (targetColor[channel] - neutralRgb[channel]) * intensity,
     );
 
   const movementColor = `rgb(${blend(0)}, ${blend(1)}, ${blend(2)})`;
 
-  // Compute glowing drop shadow effect matching current move intensity
+  // Compute glowing drop shadow effect matching current move intensity (dark mode only for clarity)
   const glowColor =
     direction === "down"
-      ? `rgba(${COLOR_DOWN_RGB.join(",")}, ${(intensity * 0.4).toFixed(2)})`
-      : `rgba(${COLOR_UP_RGB.join(",")}, ${(intensity * 0.4).toFixed(2)})`;
+      ? `rgba(${downColor.join(",")}, ${(intensity * 0.4).toFixed(2)})`
+      : `rgba(${upColor.join(",")}, ${(intensity * 0.4).toFixed(2)})`;
 
   const textShadow =
-    intensity > 0.15
+    isDark && intensity > 0.05
       ? `0 0 ${(intensity * 16).toFixed(1)}px ${glowColor}`
       : "none";
 
   if (price === null) {
     return (
-      <div className="flex items-end gap-2 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight text-white/20">
-        <span className="mb-[0.28em] mr-1 font-sans text-[0.32em] font-light text-white/25">
+      <div className="flex items-end gap-2 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight text-[var(--text-faint)]">
+        <span className="mb-[0.28em] mr-1 font-sans text-[0.32em] font-light opacity-60">
           $
         </span>
         <span className="animate-pulse">--,---.--</span>
@@ -260,7 +286,7 @@ export function AnimatedPrice({
   return (
     <div
       className={cn(
-        "flex items-end gap-1 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight transition-colors duration-150"
+        "flex items-end gap-1 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight",
       )}
       style={{
         color: movementColor,
@@ -269,7 +295,7 @@ export function AnimatedPrice({
     >
       <span
         className="mb-[0.28em] mr-[0.12em] font-sans text-[0.32em] font-light opacity-90 transition-opacity"
-        style={{ color: COLOR_CURRENCY_SYMBOL }}
+        style={{ color: currencySymbolColor }}
       >
         $
       </span>
@@ -280,7 +306,9 @@ export function AnimatedPrice({
               key={`${ch}-${i}`}
               className={cn(
                 "inline-block",
-                ch === "," ? "w-[0.38em] text-center" : "w-[0.34em] text-center"
+                ch === ","
+                  ? "w-[0.38em] text-center"
+                  : "w-[0.34em] text-center",
               )}
               style={{ opacity: 0.55 }}
             >
@@ -307,11 +335,19 @@ export function AnimatedPrice({
           }}
         >
           {direction === "up" ? (
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-full w-full"
+            >
               <path d="M12 4.5l8.2 10.4c.52.66.03 1.6-.82 1.6H4.62c-.85 0-1.34-.94-.82-1.6z" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-full w-full"
+            >
               <path d="M12 19.5L3.8 9.1c-.52-.66-.03-1.6.82-1.6h14.76c.85 0 1.34.94.82 1.6z" />
             </svg>
           )}

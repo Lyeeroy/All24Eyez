@@ -3,7 +3,7 @@ import { ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
 const inputBase =
-  "w-full rounded-lg border border-white/12 bg-black/40 px-3 py-2 text-sm text-[#e8e4dc] placeholder:text-white/30 outline-none transition-colors focus:border-[#f5d7a4]/60 focus:ring-1 focus:ring-[#f5d7a4]/40";
+  "w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-main)] placeholder:text-[var(--text-faint)] outline-none transition-colors focus:border-[var(--text-accent)]";
 
 function Field({
   label,
@@ -25,7 +25,7 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="text-[11px] font-medium uppercase tracking-wider text-white/40"
+        className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]"
       >
         {label}
       </label>
@@ -87,7 +87,7 @@ export function AuthForm() {
       noValidate
     >
       <p
-        className="text-sm font-medium text-[#e8e4dc]"
+        className="text-sm font-medium text-[var(--text-main)]"
         role="heading"
         aria-level={2}
       >
@@ -113,7 +113,7 @@ export function AuthForm() {
       {error && (
         <p
           role="alert"
-          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
+          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-400 dark:text-rose-300"
         >
           {error}
         </p>
@@ -122,7 +122,7 @@ export function AuthForm() {
       <button
         type="submit"
         disabled={pending || !username || password.length === 0}
-        className="mt-1 rounded-lg bg-[#f5d7a4] px-3 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#ffdfae] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-1 rounded-lg bg-[var(--text-accent)] px-3 py-2 text-sm font-semibold text-black dark:text-zinc-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? "Please wait…" : submitLabel}
       </button>
@@ -130,7 +130,7 @@ export function AuthForm() {
       <button
         type="button"
         onClick={() => switchMode(mode === "login" ? "signup" : "login")}
-        className="text-xs text-white/50 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
+        className="text-xs text-[var(--text-muted)] underline-offset-2 transition-colors hover:text-[var(--text-main)] hover:underline"
       >
         {mode === "login"
           ? "No account? Create one"

@@ -102,7 +102,7 @@ export function AlertPanel({
       {/* Bell button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-[44px] min-w-[44px] items-center justify-center text-[#e8e4dc]/50 transition-colors hover:text-[#f5d7a4] touch-manipulation"
+        className="flex min-h-[44px] min-w-[44px] items-center justify-center text-[var(--text-muted)] transition-colors hover:text-[var(--text-accent)] touch-manipulation"
         aria-label="Price alerts"
       >
         <BellIcon hasBadge={hasBadge} />
@@ -110,24 +110,24 @@ export function AlertPanel({
 
       {/* Panel */}
       {open && (
-        <div className="alert-panel absolute right-0 top-full z-50 mt-2 w-64 rounded-md border border-white/10 bg-[#141414] p-3 shadow-xl sm:w-72">
+        <div className="alert-panel absolute right-0 top-full z-50 mt-2 w-64 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-3 shadow-[var(--panel-shadow)] sm:w-72">
           {/* Header */}
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">
-            Alert for <span className="text-[#f5d7a4]/70">{coinName}</span>
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            Alert for <span className="text-[var(--text-accent)]">{coinName}</span>
           </p>
 
           {/* Input row */}
           <div className="flex items-center gap-2">
             {/* Above / Below toggle */}
-            <div className="flex rounded-md border border-white/10 overflow-hidden text-[11px] font-mono">
+            <div className="flex rounded-md border border-[var(--border-subtle)] overflow-hidden text-[11px] font-mono">
               <button
-                className={`px-2 py-1.5 transition-colors ${dir === "above" ? "bg-white/10 text-[#e8e4dc]" : "text-white/35 hover:text-white/60"}`}
+                className={`px-2 py-1.5 transition-colors ${dir === "above" ? "bg-black/10 dark:bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
                 onClick={() => setDir("above")}
               >
                 ↑
               </button>
               <button
-                className={`px-2 py-1.5 transition-colors ${dir === "below" ? "bg-white/10 text-[#e8e4dc]" : "text-white/35 hover:text-white/60"}`}
+                className={`px-2 py-1.5 transition-colors ${dir === "below" ? "bg-black/10 dark:bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
                 onClick={() => setDir("below")}
               >
                 ↓
@@ -141,15 +141,15 @@ export function AlertPanel({
               onChange={(e) => setTargetInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") void handleAdd(); }}
               placeholder="Target price"
-              className={`min-w-0 flex-1 rounded-md border bg-[#0a0a0a] px-2 py-1.5 font-mono text-xs text-[#e8e4dc] outline-none placeholder:text-white/20 transition-colors ${
-                inputError ? "border-rose-500" : "border-white/10 focus:border-[#f5d7a4]/40"
+              className={`min-w-0 flex-1 rounded-md border bg-[var(--bg-input)] px-2 py-1.5 font-mono text-xs text-[var(--text-main)] outline-none placeholder:text-[var(--text-faint)] transition-colors ${
+                inputError ? "border-rose-500" : "border-[var(--border-subtle)] focus:border-[var(--text-accent)]"
               }`}
             />
 
             {/* Add button */}
             <button
               onClick={() => void handleAdd()}
-              className="rounded-md border border-white/10 px-2.5 py-1.5 font-mono text-xs text-[#f5d7a4]/70 transition-colors hover:border-[#f5d7a4]/30 hover:text-[#f5d7a4]"
+              className="rounded-md border border-[var(--border-subtle)] px-2.5 py-1.5 font-mono text-xs text-[var(--text-accent)] opacity-90 transition-opacity hover:opacity-100 hover:border-[var(--text-accent)]"
             >
               Add
             </button>
@@ -157,26 +157,26 @@ export function AlertPanel({
 
           {/* Alert list */}
           {symbolAlerts.length > 0 && (
-            <div className="mt-3 flex flex-col gap-1.5 border-t border-white/8 pt-3">
+            <div className="mt-3 flex flex-col gap-1.5 border-t border-[var(--border-subtle)] pt-3">
               {symbolAlerts.map((a) => (
                 <div
                   key={a.id}
                   className={`flex items-center justify-between rounded-md px-2 py-1.5 transition-colors ${
                     a.fired
                       ? "bg-amber-500/10 border border-amber-500/20"
-                      : "bg-white/4"
+                      : "bg-black/5 dark:bg-white/5"
                   }`}
                 >
-                  <span className={`font-mono text-xs tabular-nums ${a.fired ? "text-amber-400" : "text-white/60"}`}>
+                  <span className={`font-mono text-xs tabular-nums ${a.fired ? "text-amber-500 dark:text-amber-400 font-semibold" : "text-[var(--text-muted)]"}`}>
                     {a.dir === "above" ? "↑" : "↓"}{" "}
-                    <span className="text-[#e8e4dc]/80">${formatTarget(a.target)}</span>
+                    <span className="text-[var(--text-main)]">${formatTarget(a.target)}</span>
                     {a.fired && (
-                      <span className="ml-1.5 text-[10px] text-amber-400/70">fired!</span>
+                      <span className="ml-1.5 text-[10px] text-amber-500/80 dark:text-amber-400/70">fired!</span>
                     )}
                   </span>
                   <button
                     onClick={() => onRemove(a.id)}
-                    className="ml-2 text-white/25 transition-colors hover:text-rose-400"
+                    className="ml-2 text-[var(--text-faint)] transition-colors hover:text-rose-500"
                     aria-label="Remove alert"
                   >
                     ✕
@@ -187,7 +187,7 @@ export function AlertPanel({
           )}
 
           {symbolAlerts.length === 0 && (
-            <p className="mt-3 border-t border-white/8 pt-3 font-mono text-[10px] text-white/20">
+            <p className="mt-3 border-t border-[var(--border-subtle)] pt-3 font-mono text-[10px] text-[var(--text-faint)]">
               No alerts set for {coinName}.
             </p>
           )}

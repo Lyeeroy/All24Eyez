@@ -53,8 +53,8 @@ export function UserMenu() {
   };
 
   const focusedClass = isAuthed
-    ? "border-[#f5d7a4]/70 text-[#f5d7a4]"
-    : "border-white/15 text-white/70 hover:text-white";
+    ? "border-[var(--text-accent)] text-[var(--text-accent)]"
+    : "border-[var(--border-strong)] text-[var(--text-muted)] hover:text-[var(--text-main)]";
 
   return (
     <div ref={rootRef} className="relative">
@@ -67,7 +67,7 @@ export function UserMenu() {
         aria-label={isAuthed ? `Account menu for ${user.username}` : "Account"}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full border bg-black/30 transition-colors",
+          "flex h-9 w-9 items-center justify-center rounded-full border bg-black/5 dark:bg-black/30 transition-colors",
           focusedClass
         )}
       >
@@ -82,17 +82,17 @@ export function UserMenu() {
           aria-modal="false"
           aria-label={isAuthed ? "Account menu" : "Sign in"}
           tabIndex={-1}
-          className="absolute right-0 top-11 z-50 rounded-xl border border-white/12 bg-[#111012]/95 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur outline-none"
+          className="absolute right-0 top-11 z-50 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4 shadow-[var(--panel-shadow)] backdrop-blur outline-none"
         >
           {status === "loading" ? (
-            <p className="w-64 text-sm text-white/50" aria-live="polite">
+            <p className="w-64 text-sm text-[var(--text-muted)]" aria-live="polite">
               Loading…
             </p>
           ) : status === "error" ? (
             <div className="w-64">
               <p
                 role="alert"
-                className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
+                className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-400 dark:text-rose-300"
               >
                 Can't reach the API server. Run `npx vercel dev` and open
                 http://localhost:3000.
@@ -101,29 +101,29 @@ export function UserMenu() {
           ) : isAuthed ? (
             <div className="flex w-64 flex-col gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f5d7a4]/15 text-[#f5d7a4]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--text-accent)]/15 text-[var(--text-accent)]">
                   <UserIcon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <p
-                    className="truncate text-sm font-medium text-[#e8e4dc]"
+                    className="truncate text-sm font-medium text-[var(--text-main)]"
                     title={user.username}
                   >
                     {user.username}
                   </p>
-                  <p className="text-xs uppercase tracking-wide text-white/35">
+                  <p className="text-xs uppercase tracking-wide text-[var(--text-faint)]">
                     Signed in
                   </p>
                 </div>
               </div>
 
-              <div className="h-px bg-white/10" />
+              <div className="h-px bg-[var(--border-subtle)]" />
 
               <button
                 type="button"
                 onClick={onSignOut}
                 disabled={signingOut}
-                className="rounded-lg px-3 py-2 text-left text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-50"
+                className="rounded-lg px-3 py-2 text-left text-sm text-[var(--text-muted)] transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] disabled:opacity-50"
               >
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>

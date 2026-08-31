@@ -4,12 +4,23 @@
  */
 
 // Primary color palettes (RGB arrays for dynamic interpolation)
-export const COLOR_NEUTRAL_RGB = [232, 228, 220] as const; // #e8e4dc (warm neutral silver)
-export const COLOR_UP_RGB = [34, 197, 94] as const;       // Emerald green
-export const COLOR_DOWN_RGB = [239, 68, 68] as const;     // Vivid rose red
+export const COLOR_NEUTRAL_DARK_RGB = [232, 228, 220] as const;  // #e8e4dc (warm neutral silver)
+export const COLOR_NEUTRAL_LIGHT_RGB = [24, 24, 27] as const;     // #18181b (dark zinc neutral)
+export const COLOR_NEUTRAL_RGB = COLOR_NEUTRAL_DARK_RGB;           // Default backwards compatibility
 
-// Currency symbol color
-export const COLOR_CURRENCY_SYMBOL = "#f5d7a4";
+export const COLOR_UP_DARK_RGB = [34, 197, 94] as const;           // #22c55e (emerald-500)
+export const COLOR_DOWN_DARK_RGB = [239, 68, 68] as const;         // #ef4444 (rose-500)
+
+export const COLOR_UP_LIGHT_RGB = [16, 185, 129] as const;          // #10b981 (vivid emerald green)
+export const COLOR_DOWN_LIGHT_RGB = [239, 68, 68] as const;        // #ef4444 (vivid red)
+
+export const COLOR_UP_RGB = COLOR_UP_DARK_RGB;
+export const COLOR_DOWN_RGB = COLOR_DOWN_DARK_RGB;
+
+// Currency symbol colors
+export const COLOR_CURRENCY_SYMBOL_DARK = "#f5d7a4";
+export const COLOR_CURRENCY_SYMBOL_LIGHT = "#d97706";
+export const COLOR_CURRENCY_SYMBOL = COLOR_CURRENCY_SYMBOL_DARK;
 
 // Volatility & Intensity calculation parameters
 export const DEFAULT_VOLATILITY_FLOOR = 0.0001; // Minimum expected tick relative change (0.01%)

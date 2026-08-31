@@ -5,6 +5,40 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+:root {
+  --bg-app: #f4f5f7;
+  --bg-panel: #ffffff;
+  --bg-input: #f4f4f5;
+  --text-main: #18181b;
+  --text-muted: rgba(24, 24, 27, 0.55);
+  --text-faint: rgba(24, 24, 27, 0.3);
+  --text-accent: #d97706;
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.18);
+  --range-track: rgba(0, 0, 0, 0.15);
+  --range-fill: rgba(0, 0, 0, 0.5);
+  --range-thumb: #18181b;
+  --range-thumb-shadow: rgba(24, 24, 27, 0.12);
+  --panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --bg-app: #0a0a0a;
+  --bg-panel: #141414;
+  --bg-input: #0a0a0a;
+  --text-main: #e8e4dc;
+  --text-muted: rgba(232, 228, 220, 0.5);
+  --text-faint: rgba(232, 228, 220, 0.25);
+  --text-accent: #f5d7a4;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --range-track: rgba(255, 255, 255, 0.15);
+  --range-fill: rgba(255, 255, 255, 0.4);
+  --range-thumb: #e8e4dc;
+  --range-thumb-shadow: rgba(232, 228, 220, 0.12);
+  --panel-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
 html,
 body,
 #root {
@@ -13,13 +47,14 @@ body,
 
 body {
   margin: 0;
-  background: #050505;
-  color: #f8f4ec;
+  background-color: var(--bg-app);
+  color: var(--text-main);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation;
+  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
 }
 
 .fixed-top-bar {
@@ -45,14 +80,6 @@ input:focus {
     #000 82%,
     transparent 100%
   );
-}
-
-.price-glow-up {
-  color: #e8e4dc;
-}
-
-.price-glow-down {
-  color: #e8e4dc;
 }
 
 @keyframes arrow-pop {
@@ -94,7 +121,7 @@ input:focus {
 }
 
 .crypto-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-subtle);
   border-radius: 2px;
 }
 
