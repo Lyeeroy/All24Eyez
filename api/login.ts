@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
-import { getDb } from "./lib/mongo.ts";
-import { readJson } from "./lib/body.ts";
-import { json, jsonError, setAuthCookie, signToken } from "./lib/auth.ts";
+import { getDb } from "./lib/mongo.js";
+import { readJson } from "./lib/body.js";
+import { json, jsonError, setAuthCookie, signToken } from "./lib/auth.js";
 
 interface LoginBody {
   username?: unknown;

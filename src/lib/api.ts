@@ -53,7 +53,7 @@ async function request<T>(
     } else if (body === null && res.status === 404) {
       // HTML 404 from a plain Vite server (no /api mounted).
       message =
-        "API not found (404). Run `npx vercel dev` and open http://localhost:3000 — not `npm run dev`.";
+        "API not found (404). The API is not reachable from this URL — check that the API routes are deployed and the request is coming from the same origin.";
     } else if (body === null) {
       message =
         `Request failed (${res.status}). The API returned a non-JSON response — is the backend running?`;

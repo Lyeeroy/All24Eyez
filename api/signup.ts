@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import bcrypt from "bcryptjs";
-import { getDb } from "./lib/mongo.ts";
-import { readJson } from "./lib/body.ts";
-import { json, jsonError, setAuthCookie, signToken } from "./lib/auth.ts";
-import { validateCredentials } from "./lib/validate.ts";
+import { getDb } from "./lib/mongo.js";
+import { readJson } from "./lib/body.js";
+import { json, jsonError, setAuthCookie, signToken } from "./lib/auth.js";
+import { validateCredentials } from "./lib/validate.js";
 
 const BCRYPT_ROUNDS = 12;
 
