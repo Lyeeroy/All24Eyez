@@ -1,6 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../utils/cn";
 import type { PriceDirection } from "../hooks/useBtcPrice";
+import {
+  COLOR_NEUTRAL_RGB,
+  COLOR_UP_RGB,
+  COLOR_DOWN_RGB,
+  COLOR_CURRENCY_SYMBOL,
+  INTENSITY_DECAY_MS,
+  DIGIT_SNAP_DELAY_MS,
+} from "../utils/constants";
+import {
+  createVolatilityTracker,
+  calculateCurrentVolatility,
+  calculateTickIntensity,
+  type VolatilityTracker,
+} from "../utils/volatility";
 
 const STRIP_START = -12;
 const STRIP_END = 22;
@@ -19,7 +33,7 @@ function AnimatedDigit({
   ready: boolean;
 }) {
   const [shift, setShift] = useState(digit);
-  const [instant, setInstant] = useState(true);
+  const [instant, setInstant] = useState(false);
   const prevRef = useRef(digit);
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -46,16 +60,23 @@ function AnimatedDigit({
       if (dist === 0) dist = 10;
     }
 
+    // Ensure transition is active before shift update
     setInstant(false);
-    setShift((s) => {
-      const normalized = ((s % 10) + 10) % 10;
-      return normalized + dist;
+
+    // Update shift relative to current position so rolling animation triggers immediately
+    setShift((currentShift) => {
+      const base = ((currentShift % 10) + 10) % 10;
+      return base + dist;
     });
 
+    // After roll animation completes, snap shift back to normalized target invisibly
     snapTimer.current = setTimeout(() => {
       setInstant(true);
       setShift(to);
-    }, 620);
+      requestAnimationFrame(() => {
+        setInstant(false);
+      });
+    }, DIGIT_SNAP_DELAY_MS);
 
     return () => {
       if (snapTimer.current) clearTimeout(snapTimer.current);
@@ -99,27 +120,38 @@ function formatParts(price: number) {
   });
 }
 
+export interface AnimatedPriceProps {
+  price: number | null;
+  direction: PriceDirection;
+  tickDelta?: number | null;
+  high24h?: number | null;
+  low24h?: number | null;
+  change24hPct?: number | null;
+  symbol: string;
+}
+
 export function AnimatedPrice({
   price,
   direction,
   tickDelta,
+  high24h,
+  low24h,
+  change24hPct,
   symbol,
-}: {
-  price: number | null;
-  direction: PriceDirection;
-  tickDelta?: number | null;
-  symbol: string;
-}) {
+}: AnimatedPriceProps) {
   const [ready, setReady] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const first = useRef(true);
-  const recentMoves = useRef<number[]>([]);
-  const prevSymbol = useRef(symbol);
+  const volTrackerRef = useRef<VolatilityTracker>(createVolatilityTracker());
+  const decayRef = useRef<number | null>(null);
+  const prevSymbolRef = useRef<string>(symbol);
 
+  // Reset tracker state when active crypto symbol changes
   useEffect(() => {
-    if (symbol !== prevSymbol.current) {
-      prevSymbol.current = symbol;
-      recentMoves.current = [];
+    if (prevSymbolRef.current !== symbol) {
+      prevSymbolRef.current = symbol;
+      volTrackerRef.current = createVolatilityTracker();
+      setIntensity(0);
     }
   }, [symbol]);
 
@@ -131,27 +163,86 @@ export function AnimatedPrice({
     }
   }, [price]);
 
+  // Recalculate volatility and adapt color intensity whenever a price tick arrives
   useEffect(() => {
-    if (tickDelta === null || tickDelta === undefined || tickDelta === 0) return;
+    if (
+      tickDelta === null ||
+      tickDelta === undefined ||
+      tickDelta === 0 ||
+      price === null ||
+      price <= 0
+    ) {
+      return;
+    }
 
     const move = Math.abs(tickDelta);
-    const history = recentMoves.current;
-    history.push(move);
-    if (history.length > 60) history.shift();
+    const pctMove = move / price;
 
-    // Compare this move with the recent market instead of a fixed dollar amount.
-    const sorted = [...history].sort((a, b) => a - b);
-    const typical = sorted[Math.floor((sorted.length - 1) * 0.75)] || move;
-    setIntensity(Math.min(1, move / Math.max(typical, Number.EPSILON)));
-  }, [price, tickDelta]);
+    // Calculate current market volatility benchmark
+    const currentVol = calculateCurrentVolatility(
+      volTrackerRef.current,
+      pctMove,
+      price,
+      high24h,
+      low24h,
+      change24hPct
+    );
 
-  const norm = intensity;
-  const neutral = [232, 228, 220];
-  const target = direction === "down" ? [248, 113, 113] : [74, 222, 128];
+    // Derive tick intensity relative to current market volatility scale
+    const targetIntensity = calculateTickIntensity(pctMove, currentVol);
+    setIntensity(targetIntensity);
+
+    // Cancel existing decay animation frame if running
+    if (decayRef.current !== null) {
+      cancelAnimationFrame(decayRef.current);
+    }
+
+    const startTime = performance.now();
+    const startIntensity = targetIntensity;
+
+    const animateDecay = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / INTENSITY_DECAY_MS);
+      // Ease-out quadratic decay to neutral
+      const current = startIntensity * (1 - Math.pow(progress, 2));
+      setIntensity(current);
+
+      if (progress < 1) {
+        decayRef.current = requestAnimationFrame(animateDecay);
+      } else {
+        decayRef.current = null;
+      }
+    };
+
+    decayRef.current = requestAnimationFrame(animateDecay);
+
+    return () => {
+      if (decayRef.current !== null) {
+        cancelAnimationFrame(decayRef.current);
+      }
+    };
+  }, [tickDelta, price, high24h, low24h, change24hPct]);
+
+  // Calculate RGB color transition based on direction and intensity
+  const targetColor = direction === "down" ? COLOR_DOWN_RGB : COLOR_UP_RGB;
   const blend = (channel: number) =>
-    Math.round(neutral[channel] + (target[channel] - neutral[channel]) * norm);
+    Math.round(
+      COLOR_NEUTRAL_RGB[channel] +
+        (targetColor[channel] - COLOR_NEUTRAL_RGB[channel]) * intensity
+    );
+
   const movementColor = `rgb(${blend(0)}, ${blend(1)}, ${blend(2)})`;
 
+  // Compute glowing drop shadow effect matching current move intensity
+  const glowColor =
+    direction === "down"
+      ? `rgba(${COLOR_DOWN_RGB.join(",")}, ${(intensity * 0.4).toFixed(2)})`
+      : `rgba(${COLOR_UP_RGB.join(",")}, ${(intensity * 0.4).toFixed(2)})`;
+
+  const textShadow =
+    intensity > 0.15
+      ? `0 0 ${(intensity * 16).toFixed(1)}px ${glowColor}`
+      : "none";
 
   if (price === null) {
     return (
@@ -169,11 +260,17 @@ export function AnimatedPrice({
   return (
     <div
       className={cn(
-        "flex items-end gap-1 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight transition-colors duration-300"
+        "flex items-end gap-1 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight transition-colors duration-150"
       )}
-      style={{ color: movementColor }}
+      style={{
+        color: movementColor,
+        textShadow,
+      }}
     >
-      <span className="mb-[0.28em] mr-[0.12em] font-sans text-[0.32em] font-light text-[#f5d7a4]/70">
+      <span
+        className="mb-[0.28em] mr-[0.12em] font-sans text-[0.32em] font-light opacity-90 transition-opacity"
+        style={{ color: COLOR_CURRENCY_SYMBOL }}
+      >
         $
       </span>
       {parts.split("").map((ch, i) => {
@@ -201,7 +298,7 @@ export function AnimatedPrice({
         );
       })}
 
-      {/* Arrow next to number */}
+      {/* Direction Arrow */}
       {direction !== "flat" && (
         <span
           className="arrow-pop mb-[0.42em] ml-[0.18em] inline-block h-[0.62em] w-[0.7em]"

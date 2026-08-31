@@ -85,7 +85,15 @@ export default function App() {
       </div>
 
       <main className="flex flex-col items-center gap-6 px-6 pt-16 sm:pt-[calc(2.5rem+env(safe-area-inset-top))]">
-        <AnimatedPrice price={price} direction={direction} tickDelta={tickDelta} symbol={cryptoSymbol} />
+        <AnimatedPrice
+          price={price}
+          direction={direction}
+          tickDelta={tickDelta}
+          high24h={high24h}
+          low24h={low24h}
+          change24hPct={change24hPct}
+          symbol={cryptoSymbol}
+        />
 
         {low24h !== null && high24h !== null && price !== null && (
           <RangeBar
