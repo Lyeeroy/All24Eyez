@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { ObjectId } from "mongodb";
-import { getDb } from "./lib/mongo";
-import { json, jsonError, readUser } from "./lib/auth";
+import { getDb } from "./lib/mongo.ts";
+import { json, jsonError, readUser } from "./lib/auth.ts";
 
 interface UserDoc {
   _id: ObjectId;

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { clearAuthCookie, json } from "./lib/auth";
+import { clearAuthCookie, json } from "./lib/auth.ts";
 
 export default async function handler(
   _req: IncomingMessage,
