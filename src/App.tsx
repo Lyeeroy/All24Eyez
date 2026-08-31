@@ -79,13 +79,13 @@ export default function App() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0a0a0a] text-[#e8e4dc]">
-      <div className="fixed right-4 top-4 z-50">
+      <div className="fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 flex items-center justify-between px-4 py-2">
+        <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
         <UserMenu />
       </div>
 
-      <main className="flex flex-col items-center gap-6 px-6">
-        <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
-        <AnimatedPrice price={price} direction={direction} tickDelta={tickDelta} />
+      <main className="flex flex-col items-center gap-6 px-6 pt-16 sm:pt-[calc(2.5rem+env(safe-area-inset-top))]">
+        <AnimatedPrice price={price} direction={direction} tickDelta={tickDelta} symbol={cryptoSymbol} />
 
         {low24h !== null && high24h !== null && price !== null && (
           <RangeBar

@@ -84,10 +84,18 @@ function AnimatedDigit({
   );
 }
 
+function getDecimals(price: number): number {
+  if (price >= 1) return 2;
+  if (price >= 0.1) return 3;
+  if (price >= 0.01) return 5;
+  return 8;
+}
+
 function formatParts(price: number) {
+  const decimals = getDecimals(price);
   return price.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
 }
 
@@ -95,15 +103,25 @@ export function AnimatedPrice({
   price,
   direction,
   tickDelta,
+  symbol,
 }: {
   price: number | null;
   direction: PriceDirection;
   tickDelta?: number | null;
+  symbol: string;
 }) {
   const [ready, setReady] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const first = useRef(true);
   const recentMoves = useRef<number[]>([]);
+  const prevSymbol = useRef(symbol);
+
+  useEffect(() => {
+    if (symbol !== prevSymbol.current) {
+      prevSymbol.current = symbol;
+      recentMoves.current = [];
+    }
+  }, [symbol]);
 
   useEffect(() => {
     if (price !== null && first.current) {
