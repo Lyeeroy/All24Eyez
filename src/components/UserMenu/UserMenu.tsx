@@ -67,7 +67,7 @@ export function UserMenu() {
         aria-label={isAuthed ? `Account menu for ${user.username}` : "Account"}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full border bg-black/5 dark:bg-black/30 transition-colors",
+          "flex h-9 w-9 items-center justify-center rounded-full border bg-black/30 transition-colors",
           focusedClass
         )}
       >
@@ -92,7 +92,7 @@ export function UserMenu() {
             <div className="w-64">
               <p
                 role="alert"
-                className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-400 dark:text-rose-300"
+                className="mb-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
               >
                 Can't reach the API server. Run `npx vercel dev` and open
                 http://localhost:3000.
@@ -123,7 +123,7 @@ export function UserMenu() {
                 type="button"
                 onClick={onSignOut}
                 disabled={signingOut}
-                className="rounded-lg px-3 py-2 text-left text-sm text-[var(--text-muted)] transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] disabled:opacity-50"
+                className="rounded-lg px-3 py-2 text-left text-sm text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-main)] disabled:opacity-50"
               >
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>

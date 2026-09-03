@@ -113,7 +113,7 @@ export function AuthForm() {
       {error && (
         <p
           role="alert"
-          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-400 dark:text-rose-300"
+          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300"
         >
           {error}
         </p>
@@ -122,7 +122,7 @@ export function AuthForm() {
       <button
         type="submit"
         disabled={pending || !username || password.length === 0}
-        className="mt-1 rounded-lg bg-[var(--text-accent)] px-3 py-2 text-sm font-semibold text-black dark:text-zinc-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-1 rounded-lg bg-[var(--text-accent)] px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? "Please wait…" : submitLabel}
       </button>

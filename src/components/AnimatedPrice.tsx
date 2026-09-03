@@ -1,16 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "../utils/cn";
 import type { PriceDirection } from "../hooks/useBtcPrice";
-import { useTheme } from "../hooks/useTheme";
 import {
   COLOR_NEUTRAL_DARK_RGB,
-  COLOR_NEUTRAL_LIGHT_RGB,
   COLOR_UP_DARK_RGB,
   COLOR_DOWN_DARK_RGB,
-  COLOR_UP_LIGHT_RGB,
-  COLOR_DOWN_LIGHT_RGB,
   COLOR_CURRENCY_SYMBOL_DARK,
-  COLOR_CURRENCY_SYMBOL_LIGHT,
   INTENSITY_DECAY_MS,
   DIGIT_SNAP_DELAY_MS,
 } from "../utils/constants";
@@ -133,6 +128,7 @@ export interface AnimatedPriceProps {
   low24h?: number | null;
   change24hPct?: number | null;
   symbol: string;
+  enlarged?: boolean;
 }
 
 export function AnimatedPrice({
@@ -143,8 +139,8 @@ export function AnimatedPrice({
   low24h,
   change24hPct,
   symbol,
+  enlarged = false,
 }: AnimatedPriceProps) {
-  const { resolvedTheme } = useTheme();
   const [ready, setReady] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const first = useRef(true);
@@ -152,17 +148,13 @@ export function AnimatedPrice({
   const decayRef = useRef<number | null>(null);
   const prevSymbolRef = useRef<string>(symbol);
 
-  const isDark = resolvedTheme === "dark";
+  // Dark-only palette (light mode removed)
+  const neutralRgb = COLOR_NEUTRAL_DARK_RGB;
 
-  // Select neutral RGB, directional colors, and currency symbol color based on active theme
-  const neutralRgb = isDark ? COLOR_NEUTRAL_DARK_RGB : COLOR_NEUTRAL_LIGHT_RGB;
+  const upColor = COLOR_UP_DARK_RGB;
+  const downColor = COLOR_DOWN_DARK_RGB;
 
-  const upColor = isDark ? COLOR_UP_DARK_RGB : COLOR_UP_LIGHT_RGB;
-  const downColor = isDark ? COLOR_DOWN_DARK_RGB : COLOR_DOWN_LIGHT_RGB;
-
-  const currencySymbolColor = isDark
-    ? COLOR_CURRENCY_SYMBOL_DARK
-    : COLOR_CURRENCY_SYMBOL_LIGHT;
+  const currencySymbolColor = COLOR_CURRENCY_SYMBOL_DARK;
 
   // Reset tracker state when active crypto symbol changes
   useEffect(() => {
@@ -259,20 +251,46 @@ export function AnimatedPrice({
 
   const movementColor = `rgb(${blend(0)}, ${blend(1)}, ${blend(2)})`;
 
-  // Compute glowing drop shadow effect matching current move intensity (dark mode only for clarity)
+  // Compute glowing drop shadow effect matching current move intensity
   const glowColor =
     direction === "down"
       ? `rgba(${downColor.join(",")}, ${(intensity * 0.4).toFixed(2)})`
       : `rgba(${upColor.join(",")}, ${(intensity * 0.4).toFixed(2)})`;
 
   const textShadow =
-    isDark && intensity > 0.05
+    intensity > 0.05
       ? `0 0 ${(intensity * 16).toFixed(1)}px ${glowColor}`
       : "none";
 
+  const parts = enlarged && price !== null ? formatParts(price) : null;
+
+  // Estimate rendered width in em so focus mode can use the largest
+  // font-size that still fits 96vw (plus a vertical cap).
+  let enlargedFontSize: string | undefined;
+  if (enlarged && parts !== null) {
+    let widthEm = 0.55; // "$" + margin (approx)
+    for (const ch of parts) {
+      if (ch === ",") widthEm += 0.38;
+      else if (ch === ".") widthEm += 0.34;
+      else widthEm += 0.62;
+    }
+    if (direction !== "flat") widthEm += 0.88; // arrow + margin
+    widthEm *= 1.04; // flex gaps + safety margin
+    const vwFit = 96 / widthEm;
+    enlargedFontSize = `clamp(3rem, min(${vwFit.toFixed(2)}vw, 32vh), 22rem)`;
+  }
+
   if (price === null) {
     return (
-      <div className="flex items-end gap-2 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight text-[var(--text-faint)]">
+      <div
+        className={cn(
+          "flex items-end gap-2 font-mono font-medium leading-none tracking-tight text-[var(--text-faint)]",
+          enlarged
+            ? "justify-center whitespace-nowrap"
+            : "text-[clamp(2.6rem,11vw,7.2rem)]",
+        )}
+        style={enlarged ? { fontSize: "min(14vw, 28vh)" } : undefined}
+      >
         <span className="mb-[0.28em] mr-1 font-sans text-[0.32em] font-light opacity-60">
           $
         </span>
@@ -281,16 +299,20 @@ export function AnimatedPrice({
     );
   }
 
-  const parts = formatParts(price);
+  const displayParts = parts ?? formatParts(price);
 
   return (
     <div
       className={cn(
-        "flex items-end gap-1 font-mono text-[clamp(2.6rem,11vw,7.2rem)] font-medium leading-none tracking-tight",
+        "flex items-end gap-1 font-mono font-medium leading-none tracking-tight",
+        enlarged
+          ? "w-full justify-center whitespace-nowrap"
+          : "text-[clamp(2.6rem,11vw,7.2rem)]",
       )}
       style={{
         color: movementColor,
         textShadow,
+        ...(enlarged && enlargedFontSize ? { fontSize: enlargedFontSize } : {}),
       }}
     >
       <span
@@ -299,7 +321,7 @@ export function AnimatedPrice({
       >
         $
       </span>
-      {parts.split("").map((ch, i) => {
+      {displayParts.split("").map((ch, i) => {
         if (ch === "," || ch === ".") {
           return (
             <span
@@ -318,7 +340,7 @@ export function AnimatedPrice({
         }
         return (
           <AnimatedDigit
-            key={`d-${i}-${parts.length}`}
+            key={`d-${i}-${displayParts.length}`}
             digit={Number(ch)}
             direction={direction}
             ready={ready}

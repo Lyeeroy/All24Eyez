@@ -87,8 +87,8 @@ export function CryptoSelector({
                     key={c.symbol}
                     className={`cursor-pointer px-3 py-2 font-mono text-sm transition-colors sm:py-2.5 sm:text-base ${
                       isSelected
-                        ? "text-[var(--text-accent)] bg-black/5 dark:bg-white/5 font-semibold"
-                        : "text-[var(--text-main)] opacity-80 hover:text-[var(--text-accent)] hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "text-[var(--text-accent)] bg-white/5 font-semibold"
+                        : "text-[var(--text-main)] opacity-80 hover:text-[var(--text-accent)] hover:opacity-100 hover:bg-white/5"
                     }`}
                     onClick={() => {
                       onSelect(c.symbol as CryptoSymbol);

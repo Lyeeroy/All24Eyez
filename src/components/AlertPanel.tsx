@@ -121,13 +121,13 @@ export function AlertPanel({
             {/* Above / Below toggle */}
             <div className="flex rounded-md border border-[var(--border-subtle)] overflow-hidden text-[11px] font-mono">
               <button
-                className={`px-2 py-1.5 transition-colors ${dir === "above" ? "bg-black/10 dark:bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
+                className={`px-2 py-1.5 transition-colors ${dir === "above" ? "bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
                 onClick={() => setDir("above")}
               >
                 ↑
               </button>
               <button
-                className={`px-2 py-1.5 transition-colors ${dir === "below" ? "bg-black/10 dark:bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
+                className={`px-2 py-1.5 transition-colors ${dir === "below" ? "bg-white/10 text-[var(--text-main)] font-semibold" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"}`}
                 onClick={() => setDir("below")}
               >
                 ↓
@@ -164,14 +164,14 @@ export function AlertPanel({
                   className={`flex items-center justify-between rounded-md px-2 py-1.5 transition-colors ${
                     a.fired
                       ? "bg-amber-500/10 border border-amber-500/20"
-                      : "bg-black/5 dark:bg-white/5"
+                      : "bg-white/5"
                   }`}
                 >
-                  <span className={`font-mono text-xs tabular-nums ${a.fired ? "text-amber-500 dark:text-amber-400 font-semibold" : "text-[var(--text-muted)]"}`}>
+                  <span className={`font-mono text-xs tabular-nums ${a.fired ? "text-amber-400 font-semibold" : "text-[var(--text-muted)]"}`}>
                     {a.dir === "above" ? "↑" : "↓"}{" "}
                     <span className="text-[var(--text-main)]">${formatTarget(a.target)}</span>
                     {a.fired && (
-                      <span className="ml-1.5 text-[10px] text-amber-500/80 dark:text-amber-400/70">fired!</span>
+                      <span className="ml-1.5 text-[10px] text-amber-400/70">fired!</span>
                     )}
                   </span>
                   <button

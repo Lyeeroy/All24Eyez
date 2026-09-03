@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatedPrice } from "./components/AnimatedPrice";
 import { CryptoSelector } from "./components/CryptoSelector";
+import { FocusModeToggle } from "./components/FocusModeToggle";
 import { useBtcPrice, type CryptoSymbol } from "./hooks/useBtcPrice";
 import { UserMenu } from "./components/UserMenu";
 import { useAlerts } from "./hooks/useAlerts";
 import { AlertPanel } from "./components/AlertPanel";
-import { ThemeProvider } from "./context/ThemeContext";
-import { ThemeToggle } from "./components/ThemeToggle";
 
 function getDecimals(price: number): number {
   if (price >= 1) return 2;
@@ -50,9 +49,9 @@ function RangeBar({
           <span
             className={`font-mono text-sm tabular-nums ${
               changePct > 0
-                ? "text-emerald-500 dark:text-emerald-400"
+                ? "text-emerald-400"
                 : changePct < 0
-                  ? "text-rose-500 dark:text-rose-400"
+                  ? "text-rose-400"
                   : "text-[var(--text-muted)]"
             }`}
           >
@@ -81,6 +80,7 @@ function RangeBar({
 
 function MainDashboard() {
   const [cryptoSymbol, setCryptoSymbol] = useState<CryptoSymbol>("BTCUSDT");
+  const [focusMode, setFocusMode] = useState(false);
   const {
     price,
     direction,
@@ -92,57 +92,88 @@ function MainDashboard() {
   } = useBtcPrice(cryptoSymbol);
   const { alerts, addAlert, removeAlert } = useAlerts(cryptoSymbol, price);
 
+  useEffect(() => {
+    if (!focusMode) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setFocusMode(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [focusMode]);
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-200">
-      <div className="fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 flex items-center justify-between px-4 py-2">
-        <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
-        <div className="flex items-center gap-1 sm:gap-2">
-          <ThemeToggle />
-          <AlertPanel
-            symbol={cryptoSymbol}
-            price={price}
-            alerts={alerts}
-            onAdd={addAlert}
-            onRemove={removeAlert}
-          />
-          <UserMenu />
+      {!focusMode && (
+        <div className="fixed inset-x-0 top-[env(safe-area-inset-top,0px)] z-50 flex items-center justify-between px-4 py-2">
+          <CryptoSelector symbol={cryptoSymbol} onSelect={setCryptoSymbol} />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <AlertPanel
+              symbol={cryptoSymbol}
+              price={price}
+              alerts={alerts}
+              onAdd={addAlert}
+              onRemove={removeAlert}
+            />
+            <UserMenu />
+          </div>
         </div>
+      )}
+
+      <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-4 z-50">
+        <FocusModeToggle
+          focused={focusMode}
+          onToggle={() => setFocusMode((v) => !v)}
+        />
       </div>
 
-      <main className="flex flex-col items-center gap-6 px-6 pt-16 sm:pt-[calc(2.5rem+env(safe-area-inset-top))]">
-        <AnimatedPrice
-          price={price}
-          direction={direction}
-          tickDelta={tickDelta}
-          high24h={high24h}
-          low24h={low24h}
-          change24hPct={change24hPct}
-          symbol={cryptoSymbol}
-        />
-
-        {low24h !== null && high24h !== null && price !== null && (
-          <RangeBar
-            low={low24h}
-            high={high24h}
+      {focusMode ? (
+        <main
+          aria-label="Price focus mode"
+          className="flex min-h-dvh w-full items-center justify-center px-[2vw]"
+        >
+          <AnimatedPrice
             price={price}
-            changePct={change24hPct}
+            direction={direction}
+            tickDelta={tickDelta}
+            high24h={high24h}
+            low24h={low24h}
+            change24hPct={change24hPct}
+            symbol={cryptoSymbol}
+            enlarged
           />
-        )}
+        </main>
+      ) : (
+        <main className="flex flex-col items-center gap-6 px-6 pt-16 sm:pt-[calc(2.5rem+env(safe-area-inset-top))]">
+          <AnimatedPrice
+            price={price}
+            direction={direction}
+            tickDelta={tickDelta}
+            high24h={high24h}
+            low24h={low24h}
+            change24hPct={change24hPct}
+            symbol={cryptoSymbol}
+          />
 
-        {status !== "live" && (
-          <span className="mt-6 text-[10px] uppercase tracking-widest text-[var(--text-faint)]">
-            {status === "polling" ? "polling" : status === "error" ? "offline" : "connecting…"}
-          </span>
-        )}
-      </main>
+          {low24h !== null && high24h !== null && price !== null && (
+            <RangeBar
+              low={low24h}
+              high={high24h}
+              price={price}
+              changePct={change24hPct}
+            />
+          )}
+
+          {status !== "live" && (
+            <span className="mt-6 text-[10px] uppercase tracking-widest text-[var(--text-faint)]">
+              {status === "polling" ? "polling" : status === "error" ? "offline" : "connecting…"}
+            </span>
+          )}
+        </main>
+      )}
     </div>
   );
 }
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      <MainDashboard />
-    </ThemeProvider>
-  );
+  return <MainDashboard />;
 }
